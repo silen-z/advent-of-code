@@ -1,0 +1,16 @@
+[package]
+name = "advent-of-code"
+version = "0.1.0"
+authors = ["Pavel Hrách <pavel@hrach.email>"]
+edition = "2018"
+
+[dependencies]
+
+[[bin]]
+name = "2019-23"
+path = "src/2019/day23.rs"
+
+[[bin]]
+name = "2020-01"
+path = "src/2020/day01.rs"
+

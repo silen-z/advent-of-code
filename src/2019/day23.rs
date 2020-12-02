@@ -10,9 +10,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map(|line| line.unwrap().parse())
         .collect::<Result<_, _>>()?;
 
-    let mut cpu = match advent_of_code::is_part2() {
-        true => Computer::part2(instructions),
-        false => Computer::part1(instructions),
+    let mut cpu = match advent_of_code::part() {
+        advent_of_code::Part::One => Computer::part1(instructions),
+        advent_of_code::Part::Two => Computer::part2(instructions),
     };
 
     cpu.run();

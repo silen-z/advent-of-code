@@ -8,54 +8,65 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let numbers: Vec<i32> = reader
         .lines()
         .map(|line| line.unwrap().parse())
-        .collect::<Result<Vec<i32>, _>>()?;
+        .collect::<Result<_, _>>()?;
 
-    let result = if advent_of_code::is_part2() {
-        triple_zip_each(&numbers)
-            .find_map(|(n1, n2, n3)| {
-                if n1 + n2 + n3 == 2020 {
-                    Some(n1 * n2 * n3)
-                } else {
-                    None
-                }
-            })
-            .unwrap()
+    let result =
+        match advent_of_code::part() {
+            advent_of_code::Part::One => numbers
+                .combinations::<CombineTwice>()
+                .find_map(|(n1, n2)| if n1 + n2 == 2020 { Some(n1 * n2) } else { None }),
+            advent_of_code::Part::Two => {
+                numbers
+                    .combinations::<CombineThreeTimes>()
+                    .find_map(|(n1, n2, n3)| match n1 + n2 + n3 == 2020 {
+                        true => Some(n1 * n2 * n3),
+                        false => None,
+                    })
+            }
+        };
+
+    if let Some(solution) = result {
+        println!("{}", solution);
     } else {
-        zip_each(&numbers)
-            .find_map(|(n1, n2)| if n1 + n2 == 2020 { Some(n1 * n2) } else { None })
-            .unwrap()
-    };
-
-    println!("{}", result);
+        println!("{}", "no solution found");
+    }
 
     Ok(())
 }
 
-struct ZipEachIter<'a, T> {
-    source: &'a [T],
-    pos_1: usize,
-    pos_2: usize,
+struct Combinations<'s, E, A> {
+    source: &'s [E],
+    advancer: A,
 }
 
-fn zip_each<T>(source: &[T]) -> ZipEachIter<'_, T> {
-    ZipEachIter {
-        source,
-        pos_1: 0,
-        pos_2: 1,
+trait Combiner<'s, E> {
+    type Out;
+    fn next(&mut self, source: &'s [E]) -> Option<Self::Out>;
+}
+
+impl<'s, E, A> Iterator for Combinations<'s, E, A>
+where
+    A: Combiner<'s, E>,
+{
+    type Item = A::Out;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.advancer.next(self.source)
     }
 }
 
-impl<'a, T> Iterator for ZipEachIter<'a, T> {
-    type Item = (&'a T, &'a T);
+struct CombineTwice(usize, usize);
 
-    fn next(&mut self) -> Option<Self::Item> {
-        match (self.source.get(self.pos_1), self.source.get(self.pos_2)) {
+impl<'s, E: 's> Combiner<'s, E> for CombineTwice {
+    type Out = (&'s E, &'s E);
+    fn next(&mut self, source: &'s [E]) -> Option<Self::Out> {
+        match (source.get(self.0), source.get(self.1)) {
             (Some(t1), Some(t2)) => {
-                if self.pos_2 + 1 < self.source.len() {
-                    self.pos_2 += 1;
+                if self.1 + 1 < source.len() {
+                    self.1 += 1;
                 } else {
-                    self.pos_1 += 1;
-                    self.pos_2 = self.pos_1 + 1;
+                    self.0 += 1;
+                    self.1 = self.0 + 1;
                 }
                 Some((t1, t2))
             }
@@ -64,53 +75,58 @@ impl<'a, T> Iterator for ZipEachIter<'a, T> {
     }
 }
 
-struct TripleZipEachIter<'a, T> {
-    source: &'a [T],
-    pos_1: usize,
-    pos_2: usize,
-    pos_3: usize,
-}
-
-fn triple_zip_each<T>(source: &[T]) -> TripleZipEachIter<'_, T> {
-    TripleZipEachIter {
-        source,
-        pos_1: 0,
-        pos_2: 1,
-        pos_3: 2,
+impl Default for CombineTwice {
+    fn default() -> Self {
+        CombineTwice(0, 1)
     }
 }
 
-// 1 1 1
-// 2 2 2
-// 3 3 3
-// 4 4 4
-// 5 5 5
+struct CombineThreeTimes(usize, usize, usize);
 
-impl<'a, T> Iterator for TripleZipEachIter<'a, T> {
-    type Item = (&'a T, &'a T, &'a T);
-
-    fn next(&mut self) -> Option<Self::Item> {
-        match (
-            self.source.get(self.pos_1),
-            self.source.get(self.pos_2),
-            self.source.get(self.pos_3),
-        ) {
+impl<'s, E: 's> Combiner<'s, E> for CombineThreeTimes {
+    type Out = (&'s E, &'s E, &'s E);
+    fn next(&mut self, source: &'s [E]) -> Option<Self::Out> {
+        match (source.get(self.0), source.get(self.1), source.get(self.2)) {
             (Some(t1), Some(t2), Some(t3)) => {
-                self.pos_3 += 1;
+                self.2 += 1;
 
-                if self.pos_3 >= self.source.len() {
-                    self.pos_2 += 1;
-                    self.pos_3 = self.pos_2 + 1;
+                if self.2 >= source.len() {
+                    self.1 += 1;
+                    self.2 = self.1 + 1;
                 }
 
-                if self.pos_2 + 1 >= self.source.len() {
-                    self.pos_1 += 1;
-                    self.pos_2 = self.pos_1 + 1;
-                    self.pos_3 = self.pos_2 + 1;
+                if self.1 + 1 >= source.len() {
+                    self.0 += 1;
+                    self.1 = self.0 + 1;
+                    self.2 = self.1 + 1;
                 }
                 Some((t1, t2, t3))
             }
             _ => None,
+        }
+    }
+}
+
+impl Default for CombineThreeTimes {
+    fn default() -> Self {
+        CombineThreeTimes(0, 1, 2)
+    }
+}
+
+trait Combinable<'s, E> {
+    fn combinations<A>(&self) -> Combinations<E, A>
+    where
+        A: Combiner<'s, E> + Default;
+}
+
+impl<'s, E> Combinable<'s, E> for [E] {
+    fn combinations<A>(&self) -> Combinations<E, A>
+    where
+        A: Combiner<'s, E> + Default,
+    {
+        Combinations {
+            source: self,
+            advancer: A::default(),
         }
     }
 }
@@ -121,8 +137,8 @@ mod test {
 
     #[test]
     fn zip_each_iter() {
-        let input = vec![1, 2, 3];
-        let mut iter = zip_each(&input);
+        let input = &[1, 2, 3];
+        let mut iter = input.combinations::<CombineTwice>();
 
         assert_eq!(iter.next(), Some((&1, &2)));
         assert_eq!(iter.next(), Some((&1, &3)));
@@ -132,8 +148,8 @@ mod test {
 
     #[test]
     fn triple_zip_each_iter() {
-        let input = vec![1, 2, 3, 4, 5];
-        let mut iter = triple_zip_each(&input);
+        let input = &[1, 2, 3, 4, 5];
+        let mut iter = input.combinations::<CombineThreeTimes>();
 
         assert_eq!(iter.next(), Some((&1, &2, &3)));
         assert_eq!(iter.next(), Some((&1, &2, &4)));
@@ -150,15 +166,17 @@ mod test {
 
     #[test]
     fn sample_input() {
-        let input = vec![1721, 979, 366, 299, 675, 1456];
+        let input = &[1721, 979, 366, 299, 675, 1456];
 
-        let result = triple_zip_each(&input).find_map(|(n1, n2, n3)| {
-            if n1 + n2 + n3 == 2020 {
-                Some(n1 * n2 * n3)
-            } else {
-                None
-            }
-        });
+        let result = input
+            .combinations::<CombineThreeTimes>()
+            .find_map(|(n1, n2, n3)| {
+                if n1 + n2 + n3 == 2020 {
+                    Some(n1 * n2 * n3)
+                } else {
+                    None
+                }
+            });
 
         assert_eq!(result, Some(241861950));
     }

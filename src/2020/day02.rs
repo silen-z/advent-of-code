@@ -5,18 +5,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let input_file = File::open("input/2020_02.txt")?;
     let reader = BufReader::new(input_file);
 
-    let check_policy = match advent_of_code::is_part2() {
-        true => Policy::is_part2_valid,
-        false => Policy::is_part1_valid,
+    let check_policy = match advent_of_code::part() {
+        advent_of_code::Part::One => Policy::is_part1_valid,
+        advent_of_code::Part::Two => Policy::is_part2_valid,
     };
 
-    let result = reader
+    let solution = reader
         .lines()
         .map(|line| line.unwrap().parse().unwrap())
         .filter(check_policy)
         .count();
 
-    println!("{}", result);
+    println!("{}", solution);
 
     Ok(())
 }
@@ -55,7 +55,8 @@ impl std::str::FromStr for Policy {
 
         match parts.as_slice() {
             [range, c, password] => {
-                let range = match range.split('-').collect::<Vec<_>>().as_slice() {
+                let parts: Vec<&str> = range.split('-').collect();
+                let range = match parts.as_slice() {
                     [from, to] => {
                         let from = from.parse().map_err(|_| "invalid from number")?;
                         let to = to.parse().map_err(|_| "invalid to number")?;

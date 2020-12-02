@@ -14,3 +14,6 @@ path = "src/2019/day23.rs"
 name = "2020-01"
 path = "src/2020/day01.rs"
 
+[[bin]]
+name = "2020-02"
+path = "src/2020/day02.rs"

@@ -23,36 +23,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 #[derive(Debug)]
 struct Policy {
-    expected: RangeInclusive<usize>,
+    range: RangeInclusive<usize>,
     password: String,
-    required_char: char,
+    c: char,
 }
 
 impl Policy {
     fn is_part1_valid(&self) -> bool {
-        let actual = self
-            .password
-            .chars()
-            .filter(|c| *c == self.required_char)
-            .count();
-        self.expected.contains(&actual)
+        let actual = self.password.matches(self.c).count();
+        self.range.contains(&actual)
     }
 
     fn is_part2_valid(&self) -> bool {
         let c: Vec<char> = self.password.chars().collect();
 
-        match (
-            c.get(*self.expected.start() - 1),
-            c.get(*self.expected.end() - 1),
-        ) {
-            (Some(c1), Some(c2))
-                if (*c1 == self.required_char && *c2 != self.required_char)
-                    || (*c1 != self.required_char && *c2 == self.required_char) =>
-            {
-                true
-            }
-            _ => false,
-        }
+        let first = self.range.start() - 1;
+        let second = self.range.end() - 1;
+
+        matches!((
+            c.get(first), c.get(second)),
+            (Some(c1), Some(c2)) if (*c1 == self.c) ^ (*c2 == self.c)
+        )
     }
 }
 
@@ -64,7 +55,7 @@ impl std::str::FromStr for Policy {
 
         match parts.as_slice() {
             [range, c, password] => {
-                let expected = match range.split('-').collect::<Vec<_>>().as_slice() {
+                let range = match range.split('-').collect::<Vec<_>>().as_slice() {
                     [from, to] => {
                         let from = from.parse().map_err(|_| "invalid from number")?;
                         let to = to.parse().map_err(|_| "invalid to number")?;
@@ -74,8 +65,8 @@ impl std::str::FromStr for Policy {
                 }?;
 
                 Ok(Policy {
-                    expected,
-                    required_char: c.chars().nth(0).unwrap(),
+                    range,
+                    c: c.chars().next().unwrap(),
                     password: (*password).to_owned(),
                 })
             }

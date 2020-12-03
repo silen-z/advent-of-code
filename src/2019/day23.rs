@@ -160,9 +160,11 @@ enum InstructionParseError {
     InvalidJumpOffest,
     InvalidRegister,
 }
+
 impl std::fmt::Display for InstructionParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "couldn't parse instruction: {:?}", self)
     }
 }
+
 impl std::error::Error for InstructionParseError {}

@@ -28,7 +28,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if let Some(solution) = result {
         println!("{}", solution);
     } else {
-        println!("{}", "no solution found");
+        println!("no solution found");
     }
 
     Ok(())

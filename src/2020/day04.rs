@@ -41,19 +41,12 @@ impl PassportData {
     }
 }
 
-const REQUIRED_FIELDS: &[(&str, &dyn Fn(&str) -> bool)] = &[
-    ("byr", &|byr| match byr.parse::<u32>() {
-        Ok(1920..=2002) => true,
-        _ => false,
-    }),
-    ("iyr", &|iyr| match iyr.parse::<u32>() {
-        Ok(2010..=2020) => true,
-        _ => false,
-    }),
-    ("eyr", &|eyr| match eyr.parse::<u32>() {
-        Ok(2020..=2030) => true,
-        _ => false,
-    }),
+type FieldValidator = dyn Fn(&str) -> bool;
+
+const REQUIRED_FIELDS: &[(&str, &FieldValidator)] = &[
+    ("byr", &|byr| matches!(byr.parse::<u32>(), Ok(1920..=2002))),
+    ("iyr", &|iyr| matches!(iyr.parse::<u32>(), Ok(2010..=2020))),
+    ("eyr", &|eyr| matches!(eyr.parse::<u32>(), Ok(2020..=2030))),
     ("hgt", &is_valid_height),
     ("hcl", &is_valid_color),
     ("ecl", &|ecl| {
@@ -64,18 +57,14 @@ const REQUIRED_FIELDS: &[(&str, &dyn Fn(&str) -> bool)] = &[
 
 fn is_valid_height(hgt: &str) -> bool {
     if let Some(cm) = hgt.strip_suffix("cm") {
-        match cm.parse::<u32>() {
-            Ok(150..=193) => true,
-            _ => false,
-        }
-    } else if let Some(inches) = hgt.strip_suffix("in") {
-        match inches.parse::<u32>() {
-            Ok(59..=76) => true,
-            _ => false,
-        }
-    } else {
-        false
+        return matches!(cm.parse(), Ok(150..=193));
     }
+
+    if let Some(inches) = hgt.strip_suffix("in") {
+        return matches!(inches.parse(), Ok(59..=76));
+    }
+
+    false
 }
 
 fn is_valid_color(s: &str) -> bool {
@@ -92,9 +81,9 @@ impl std::str::FromStr for PassportData {
         let mut values = HashMap::new();
 
         for pair in s.split_whitespace() {
-            let parts: Vec<&str> = pair.split(':').collect();
-            match parts.as_slice() {
-                [key, value] => {
+            let mut parts = pair.split(':');
+            match (parts.next(), parts.next()) {
+                (Some(key), Some(value)) => {
                     values.insert(key.to_string(), value.to_string());
                 }
                 _ => return Err(format!("invalid passport: {:?}", s)),

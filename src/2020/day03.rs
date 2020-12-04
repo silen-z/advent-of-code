@@ -16,10 +16,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             slopes
                 .into_iter()
                 .map(|s| s.count_trees())
-                .fold(0, |a, c| match a {
-                    0 => c,
-                    _ => a * c,
-                })
+                .fold(1, |a, c| a * c)
         }
     };
 
@@ -81,9 +78,7 @@ impl std::str::FromStr for Map {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let width = s
-            .find('\n')
-            .ok_or_else(|| String::from("input has no lines"))?;
+        let width = s.find('\n').unwrap_or_else(|| s.len());
 
         let mut tiles = Vec::with_capacity(s.len());
 

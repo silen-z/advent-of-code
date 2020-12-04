@@ -8,12 +8,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         advent_of_code::Part::Two => PassportData::is_part2_valid,
     };
 
-    let valid_passports = input
-        .split("\n\n")
-        .filter_map(|s| match s.parse::<PassportData>() {
-            Ok(p) if check_passport(&p) => Some(p),
-            _ => None,
-        })
+    let valid_passports = PassportData::from_list(&input)
+        .filter(|p| check_passport(p))
         .count();
 
     println!("{}", valid_passports);
@@ -25,6 +21,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 struct PassportData(HashMap<String, String>);
 
 impl PassportData {
+    fn from_list<'i>(input: &'i str) -> impl Iterator<Item = PassportData> + 'i {
+        input.split("\n\n").filter_map(|s| s.parse().ok())
+    }
+
     fn is_part1_valid(&self) -> bool {
         REQUIRED_FIELDS
             .iter()
@@ -43,34 +43,34 @@ impl PassportData {
 
 const REQUIRED_FIELDS: &[(&str, &dyn Fn(&str) -> bool)] = &[
     ("byr", &|byr| match byr.parse::<u32>() {
-        Ok(n) if (1920..=2002).contains(&n) => true,
+        Ok(1920..=2002) => true,
         _ => false,
     }),
     ("iyr", &|iyr| match iyr.parse::<u32>() {
-        Ok(n) if (2010..=2020).contains(&n) => true,
+        Ok(2010..=2020) => true,
         _ => false,
     }),
     ("eyr", &|eyr| match eyr.parse::<u32>() {
-        Ok(n) if (2020..=2030).contains(&n) => true,
+        Ok(2020..=2030) => true,
         _ => false,
     }),
     ("hgt", &is_valid_height),
     ("hcl", &is_valid_color),
-    ("ecl", &|ecl| EYE_COLORS.contains(&ecl)),
+    ("ecl", &|ecl| {
+        matches!(ecl, "amb" | "blu" | "brn" | "gry" | "grn" | "hzl" | "oth")
+    }),
     ("pid", &|pid| pid.len() == 9 && pid.parse::<u32>().is_ok()),
 ];
-
-const EYE_COLORS: &[&str] = &["amb", "blu", "brn", "gry", "grn", "hzl", "oth"];
 
 fn is_valid_height(hgt: &str) -> bool {
     if let Some(cm) = hgt.strip_suffix("cm") {
         match cm.parse::<u32>() {
-            Ok(n) if (150..=193).contains(&n) => true,
+            Ok(150..=193) => true,
             _ => false,
         }
     } else if let Some(inches) = hgt.strip_suffix("in") {
         match inches.parse::<u32>() {
-            Ok(n) if (59..=76).contains(&n) => true,
+            Ok(59..=76) => true,
             _ => false,
         }
     } else {
@@ -80,7 +80,7 @@ fn is_valid_height(hgt: &str) -> bool {
 
 fn is_valid_color(s: &str) -> bool {
     match s.strip_prefix('#') {
-        Some(code) if code.chars().all(|c| c.is_ascii_hexdigit()) => true,
+        Some(code) if code.len() == 6 && code.chars().all(|c| c.is_ascii_hexdigit()) => true,
         _ => false,
     }
 }
@@ -125,12 +125,8 @@ hgt:179cm
 hcl:#cfa07d eyr:2025 pid:166559648
 iyr:2011 ecl:brn hgt:59in";
 
-        let valid_passports = input
-            .split("\n\n")
-            .filter_map(|s| match s.parse::<PassportData>() {
-                Ok(p) if p.is_part1_valid() => Some(p),
-                _ => None,
-            })
+        let valid_passports = PassportData::from_list(input)
+            .filter(|p| p.is_part1_valid())
             .count();
 
         assert_eq!(valid_passports, 2);

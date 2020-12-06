@@ -6,17 +6,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let trees = match advent_of_code::part() {
         advent_of_code::Part::One => map.slope(3, 1).count_trees(),
         advent_of_code::Part::Two => {
-            let slopes = &mut [
+            let mut slopes = [
                 map.slope(1, 1),
                 map.slope(3, 1),
                 map.slope(5, 1),
                 map.slope(7, 1),
                 map.slope(1, 2),
             ];
-            slopes
-                .into_iter()
-                .map(|s| s.count_trees())
-                .fold(1, |a, c| a * c)
+            slopes.iter_mut().map(Slope::count_trees).product()
         }
     };
 
@@ -57,11 +54,7 @@ struct Slope<'map> {
 
 impl Slope<'_> {
     fn count_trees(&mut self) -> usize {
-        self.filter(|t| match t {
-            Tile::Tree => true,
-            _ => false,
-        })
-        .count()
+        self.filter(|t| matches!(t, Tile::Tree)).count()
     }
 }
 

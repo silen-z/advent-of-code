@@ -16,10 +16,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn anyone_answered_yes(group: &str) -> usize {
-    let mut answers = HashSet::new();
-    for c in group.chars().filter(char::is_ascii_alphabetic) {
-        answers.insert(c);
-    }
+    let answers: HashSet<char> = group.chars().filter(|c| matches!(c, 'a'..='z')).collect();
     answers.len()
 }
 

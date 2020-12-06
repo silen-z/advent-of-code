@@ -154,6 +154,7 @@ impl std::str::FromStr for Instruction {
         }
     }
 }
+#[allow(clippy::enum_variant_names)]
 #[derive(Debug)]
 enum InstructionParseError {
     InvalidInstruction,

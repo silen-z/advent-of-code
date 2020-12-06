@@ -7,7 +7,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         advent_of_code::Part::One => ids.max().unwrap(),
         advent_of_code::Part::Two => {
             let mut ids: Vec<u16> = ids.collect();
-            ids.sort();
+            ids.sort_unstable();
             ids.windows(2)
                 .find_map(|pair| match pair {
                     [a, b] if a + 1 != *b => Some(a + 1),

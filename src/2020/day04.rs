@@ -34,10 +34,7 @@ impl PassportData {
     fn is_part2_valid(&self) -> bool {
         REQUIRED_FIELDS
             .iter()
-            .all(|(key, validator)| match self.0.get(*key) {
-                Some(value) if validator(value) => true,
-                _ => false,
-            })
+            .all(|(key, validator)| matches!(self.0.get(*key), Some(value) if validator(value)))
     }
 }
 

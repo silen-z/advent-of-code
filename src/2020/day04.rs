@@ -69,7 +69,7 @@ fn is_valid_height(hgt: &str) -> bool {
 
 fn is_valid_color(s: &str) -> bool {
     match s.strip_prefix('#') {
-        Some(code) if code.len() == 6 && code.chars().all(|c| c.is_ascii_hexdigit()) => true,
+        Some(code) => code.len() == 6 && code.chars().all(|c| matches!(c, 'a'..='z' | '0'..='9')),
         _ => false,
     }
 }

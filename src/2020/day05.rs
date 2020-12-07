@@ -23,6 +23,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn decode_boarding_id(code: &str) -> u16 {
+    // code.chars().fold(0, |a, c| match c {
+    //     'F' | 'L' => a << 1,
+    //     'B' | 'R' => (a << 1) | 1,
+    //     _ => panic!(),
+    // })
+
     let (row, col) = code.split_at(7);
 
     let row = row.chars().fold(0, |a, c| match c {
@@ -37,5 +43,5 @@ fn decode_boarding_id(code: &str) -> u16 {
         _ => panic!(),
     });
 
-    row * 8 + col
+    (row << 3) | col
 }

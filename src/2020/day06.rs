@@ -1,37 +1,36 @@
-use std::collections::HashSet;
+const INPUT: &str = include_str!("../../input/2020_06.txt");
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let input = std::fs::read_to_string("input/2020_06.txt")?;
-
+fn main() {
     let strategy = match advent_of_code::part() {
         advent_of_code::Part::One => anyone_answered_yes,
         advent_of_code::Part::Two => everyone_answered_yes,
     };
 
-    let result: usize = input.split("\n\n").map(strategy).sum();
+    let result: u32 = INPUT.split("\n\n").map(strategy).sum();
 
     println!("{}", result);
-
-    Ok(())
 }
 
-fn anyone_answered_yes(group: &str) -> usize {
-    let answers: HashSet<char> = group.chars().filter(|c| matches!(c, 'a'..='z')).collect();
-    answers.len()
+const OFFSET: u32 = 'a' as u32;
+
+fn anyone_answered_yes(group: &str) -> u32 {
+    group
+        .chars()
+        .filter(|c| *c != '\n')
+        .fold(0u32, |bitset, c| bitset | (1 << (c as u32) - OFFSET))
+        .count_ones()
 }
 
-fn everyone_answered_yes(group: &str) -> usize {
-    let mut lines = group.lines();
+fn everyone_answered_yes(group: &str) -> u32 {
+    let mut set = u32::MAX;
 
-    let answers: HashSet<char> = match lines.next() {
-        Some(first) => first.chars().collect(),
-        _ => return 0,
-    };
+    for line in group.lines() {
+        let g = line
+            .chars()
+            .fold(0u32, |bitset, c| bitset | (1 << (c as u32) - OFFSET));
 
-    lines
-        .fold(answers, |answers, line| {
-            let other_answers = line.chars().collect();
-            answers.intersection(&other_answers).copied().collect()
-        })
-        .len()
+        set &= g;
+    }
+
+    set.count_ones()
 }

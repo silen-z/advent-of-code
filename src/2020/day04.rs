@@ -1,20 +1,18 @@
 use std::collections::HashMap;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let input = std::fs::read_to_string("input/2020_04.txt")?;
+const INPUT: &str = include_str!("../../input/2020_04.txt");
 
+fn main() {
     let check_passport = match advent_of_code::part() {
         advent_of_code::Part::One => PassportData::is_part1_valid,
         advent_of_code::Part::Two => PassportData::is_part2_valid,
     };
 
-    let valid_passports = PassportData::from_list(&input)
+    let valid_passports = PassportData::from_list(INPUT)
         .filter(|p| check_passport(p))
         .count();
 
     println!("{}", valid_passports);
-
-    Ok(())
 }
 
 #[derive(Debug)]

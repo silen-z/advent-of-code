@@ -1,14 +1,13 @@
-use std::fs::File;
-use std::io::{BufRead, BufReader};
+use advent_of_code::prelude::*;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let input_file = File::open("input/2020_01.txt")?;
-    let reader = BufReader::new(input_file);
+const INPUT: &str = include_str!("../../input/2020_01.txt");
 
-    let numbers: Vec<i32> = reader
+fn main() {
+    let numbers: Vec<i32> = INPUT
         .lines()
-        .map(|line| line.unwrap().parse())
-        .collect::<Result<_, _>>()?;
+        .map(str::parse)
+        .collect::<Result<_, _>>()
+        .or_exit_with("couldn't parse input");
 
     let result =
         match advent_of_code::part() {
@@ -25,13 +24,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         };
 
-    if let Some(solution) = result {
-        println!("{}", solution);
-    } else {
-        println!("no solution found");
-    }
+    let solution = result.or_exit_with("no solution found");
 
-    Ok(())
+    println!("{}", solution);
 }
 
 struct Combinations<'s, E, A> {

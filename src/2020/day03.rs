@@ -1,7 +1,9 @@
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let input = std::fs::read_to_string("input/2020_03.txt")?;
+use advent_of_code::prelude::*;
 
-    let map: Map = input.parse()?;
+const INPUT: &str = include_str!("../../input/2020_03.txt");
+
+fn main() {
+    let map: Map = INPUT.parse().or_exit_with("can't parse input");
 
     let trees = match advent_of_code::part() {
         advent_of_code::Part::One => map.slope(3, 1).count_trees(),
@@ -18,8 +20,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     println!("{}", trees);
-
-    Ok(())
 }
 
 enum Tile {

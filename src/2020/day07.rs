@@ -1,4 +1,23 @@
+use advent_of_code::prelude::*;
+
 use std::collections::HashSet;
+
+const INPUT: &str = include_str!("../../input/2020_07.txt");
+
+fn main() {
+    let bags: BagRules = INPUT.parse().or_exit_with("can't parse input");
+
+    let gold_id = bags
+        .find_index("shiny gold")
+        .or_exit_with("there is no shiny gold bag");
+
+    let result = match advent_of_code::part() {
+        advent_of_code::Part::One => bags.containers(gold_id),
+        advent_of_code::Part::Two => bags.contained_bags(gold_id),
+    };
+
+    println!("{}", result);
+}
 
 #[derive(Default, Debug)]
 struct BagRules {
@@ -66,27 +85,6 @@ struct Rule {
     container: usize,
     child: usize,
     amount: usize,
-}
-
-const INPUT: &str = include_str!("../../input/2020_07.txt");
-
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // let input = std::fs::read_to_string("input/2020_07.txt")?;
-
-    let bags: BagRules = INPUT.parse()?;
-
-    let gold_id = bags
-        .find_index("shiny gold")
-        .ok_or("there is no shiny gold bag")?;
-
-    let result = match advent_of_code::part() {
-        advent_of_code::Part::One => bags.containers(gold_id),
-        advent_of_code::Part::Two => bags.contained_bags(gold_id),
-    };
-
-    println!("{}", result);
-
-    Ok(())
 }
 
 impl std::str::FromStr for BagRules {

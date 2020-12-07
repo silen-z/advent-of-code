@@ -1,29 +1,25 @@
-use std::io::{BufRead, BufReader};
-use std::{fs::File, ops::RangeInclusive};
+use advent_of_code::prelude::*;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let input_file = File::open("input/2020_02.txt")?;
-    let reader = BufReader::new(input_file);
+const INPUT: &str = include_str!("../../input/2020_02.txt");
 
+fn main() {
     let check_policy = match advent_of_code::part() {
         advent_of_code::Part::One => Policy::is_part1_valid,
         advent_of_code::Part::Two => Policy::is_part2_valid,
     };
 
-    let solution = reader
+    let solution = INPUT
         .lines()
-        .map(|line| line.unwrap().parse().unwrap())
+        .map(|line| line.parse().or_exit_with("can't parse policy"))
         .filter(check_policy)
         .count();
 
     println!("{}", solution);
-
-    Ok(())
 }
 
 #[derive(Debug)]
 struct Policy {
-    range: RangeInclusive<usize>,
+    range: std::ops::RangeInclusive<usize>,
     password: String,
     c: char,
 }

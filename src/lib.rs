@@ -19,10 +19,9 @@ pub mod prelude {
     }
 
     use std::fmt::Display;
-
     pub trait UserErrorMessageExit<T> {
         fn or_exit(self) -> T;
-        fn or_exit_with(self, msg: &str) -> T;
+        fn or_exit_with(self, msg: impl Display) -> T;
     }
 
     impl<T, E: Display> UserErrorMessageExit<T> for Result<T, E> {
@@ -36,12 +35,12 @@ pub mod prelude {
             }
         }
 
-        fn or_exit_with(self, msg: &str) -> T {
+        fn or_exit_with(self, msg: impl Display) -> T {
             match self {
                 Result::Ok(v) => v,
                 Result::Err(err) => {
                     eprintln!("{}: {}", msg, err);
-                    std::process::exit(1);
+                    std::process::exit(0);
                 }
             }
         }
@@ -57,7 +56,7 @@ pub mod prelude {
             }
         }
 
-        fn or_exit_with(self, msg: &str) -> T {
+        fn or_exit_with(self, msg: impl Display) -> T {
             match self {
                 Option::Some(v) => v,
                 Option::None => {

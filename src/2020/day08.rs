@@ -5,16 +5,27 @@ const INPUT: &str = include_str!("../../input/2020_08.txt");
 fn main() {
     let program = INPUT
         .lines()
-        .map(|line| line.parse().or_exit_with("couldn't parse instruction"))
+        .enumerate()
+        .map(|(ln, line)| {
+            line.parse()
+                .or_exit_with(format!("couldn't parse instruction on line '{}'", ln + 1))
+        })
         .collect();
 
     let solution = match advent_of_code::part() {
-        advent_of_code::Part::One => Computer::new(program).run().0,
+        advent_of_code::Part::One => {
+            let mut computer = Computer::default();
+            let (result, _) = computer.run(&program);
+            result
+        }
         advent_of_code::Part::Two => program
             .patches()
-            .find_map(|patched| match Computer::new(patched).run() {
-                (result, true) => Some(result),
-                _ => None,
+            .find_map(|patch| {
+                let mut computer = Computer::with_patch(patch);
+                match computer.run(&program) {
+                    (result, true) => Some(result),
+                    _ => None,
+                }
             })
             .or_exit_with("didn't find correct patch"),
     };
@@ -23,61 +34,76 @@ fn main() {
 }
 struct Program(Vec<Instruction>);
 
-impl Program {
-    fn patches(self) -> impl Iterator<Item = Program> {
-        (0..self.0.len()).filter_map(move |line| self.create_patch(line))
-    }
+struct Patch {
+    index: usize,
+    patched_instruction: Instruction,
+}
 
-    fn create_patch(&self, line: usize) -> Option<Program> {
-        let patch = match self.0.get(line) {
-            Some(Instruction::NoOp(n)) => Instruction::Jump(*n),
-            Some(Instruction::Jump(n)) => Instruction::NoOp(*n),
+impl Patch {
+    fn for_instruction(instruction: &Instruction, index: usize) -> Option<Patch> {
+        let patched_instruction = match instruction {
+            NoOp(n) => Jump(*n),
+            Jump(n) => NoOp(*n),
             _ => return None,
         };
 
-        let mut patched = self.0.clone();
-        patched[line] = patch;
-
-        Some(Program(patched))
+        Some(Patch {
+            index,
+            patched_instruction,
+        })
     }
 }
 
+impl Program {
+    fn patches(&self) -> impl Iterator<Item = Patch> + '_ {
+        self.0
+            .iter()
+            .enumerate()
+            .filter_map(|(index, instruction)| Patch::for_instruction(instruction, index))
+    }
+}
+
+#[derive(Default)]
 struct Computer {
-    acc: isize,
-    ip: isize,
-    program: Program,
-    exectued: Vec<usize>,
+    acc: i32,
+    ip: usize,
+    patch: Option<Patch>,
 }
 
 impl Computer {
-    fn new(program: Program) -> Self {
+    fn with_patch(patch: Patch) -> Self {
         Computer {
-            acc: 0,
-            ip: 0,
-            program,
-            exectued: Vec::new(),
+            patch: Some(patch),
+            ..Computer::default()
         }
     }
 
-    fn run(&mut self) -> (isize, bool) {
+    fn run(&mut self, program: &Program) -> (i32, bool) {
+        let mut executed = Vec::with_capacity(program.0.len());
         loop {
-            let ip = self.ip as usize;
-
-            if self.exectued.contains(&ip) {
+            if executed.contains(&self.ip) {
                 return (self.acc, false);
             }
+            executed.push(self.ip);
 
-            self.exectued.push(ip);
+            let instruction = match self.patch.as_ref() {
+                Some(patch) if patch.index == self.ip => Some(&patch.patched_instruction),
+                _ => program.0.get(self.ip),
+            };
 
-            match self.program.0.get(ip) {
-                Some(Instruction::Acc(n)) => {
+            match instruction {
+                Some(Acc(n)) => {
                     self.acc += n;
                     self.ip += 1;
                 }
-                Some(Instruction::Jump(jmp)) => {
-                    self.ip += jmp;
+                Some(Jump(offset)) => {
+                    let next_ip = self.ip as i32 + offset;
+                    if next_ip < 0 {
+                        return (self.acc, true);
+                    }
+                    self.ip = next_ip as usize;
                 }
-                Some(Instruction::NoOp(_)) => {
+                Some(NoOp(_)) => {
                     self.ip += 1;
                 }
                 None => {
@@ -90,10 +116,11 @@ impl Computer {
 
 #[derive(Clone)]
 enum Instruction {
-    Acc(isize),
-    Jump(isize),
-    NoOp(isize),
+    Acc(i32),
+    Jump(i32),
+    NoOp(i32),
 }
+use Instruction::*;
 
 impl std::str::FromStr for Instruction {
     type Err = &'static str;
@@ -103,9 +130,9 @@ impl std::str::FromStr for Instruction {
         let param = param.parse().map_err(|_| "invalid parameter")?;
 
         match opcode {
-            "nop" => Ok(Instruction::NoOp(param)),
-            "jmp" => Ok(Instruction::Jump(param)),
-            "acc" => Ok(Instruction::Acc(param)),
+            "nop" => Ok(NoOp(param)),
+            "jmp" => Ok(Jump(param)),
+            "acc" => Ok(Acc(param)),
             _ => Err("unknown instruction"),
         }
     }

@@ -17,7 +17,7 @@ fn anyone_answered_yes(group: &str) -> u32 {
     group
         .chars()
         .filter(|c| *c != '\n')
-        .fold(0u32, |bitset, c| bitset | (1 << (c as u32) - OFFSET))
+        .fold(0u32, |bitset, c| bitset | ((1 << (c as u32)) - OFFSET))
         .count_ones()
 }
 
@@ -27,7 +27,7 @@ fn everyone_answered_yes(group: &str) -> u32 {
     for line in group.lines() {
         let g = line
             .chars()
-            .fold(0u32, |bitset, c| bitset | (1 << (c as u32) - OFFSET));
+            .fold(0u32, |bitset, c| bitset | ((1 << (c as u32)) - OFFSET));
 
         set &= g;
     }

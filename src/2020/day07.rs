@@ -1,7 +1,5 @@
 use advent_of_code::prelude::*;
 
-use std::collections::HashSet;
-
 const INPUT: &str = include_str!("../../input/2020_07.txt");
 
 fn main() {
@@ -50,13 +48,13 @@ impl BagRules {
     }
 
     fn containers(&self, index: usize) -> usize {
-        let mut visited = HashSet::new();
+        let mut visited = Vec::with_capacity(self.bags.len());
 
         self.count_containers(index, &mut visited) - 1
     }
 
-    fn count_containers(&self, index: usize, visited: &mut HashSet<usize>) -> usize {
-        visited.insert(index);
+    fn count_containers(&self, index: usize, visited: &mut Vec<usize>) -> usize {
+        visited.push(index);
         let mut sum = 1;
         for edge in &self.rules {
             if edge.child == index && !visited.contains(&edge.container) {
@@ -119,12 +117,6 @@ impl std::str::FromStr for BagRules {
 
         Ok(bag_rules)
     }
-}
-
-fn split_once<'a>(s: &'a str, delimiter: &'_ str) -> Option<(&'a str, &'a str)> {
-    let mid = s.find(delimiter)?;
-
-    Some((&s[..mid], &s[mid + delimiter.len()..]))
 }
 
 #[derive(Debug)]

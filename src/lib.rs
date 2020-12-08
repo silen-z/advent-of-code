@@ -11,14 +11,21 @@ pub fn part() -> Part {
 }
 
 pub mod prelude {
+
+    pub fn split_once<'a>(s: &'a str, delimiter: &'_ str) -> Option<(&'a str, &'a str)> {
+        let mid = s.find(delimiter)?;
+
+        Some((&s[..mid], &s[mid + delimiter.len()..]))
+    }
+
     use std::fmt::Display;
 
-    pub trait UserExitErrorMessage<T> {
+    pub trait UserErrorMessageExit<T> {
         fn or_exit(self) -> T;
         fn or_exit_with(self, msg: &str) -> T;
     }
 
-    impl<T, E: Display> UserExitErrorMessage<T> for Result<T, E> {
+    impl<T, E: Display> UserErrorMessageExit<T> for Result<T, E> {
         fn or_exit(self) -> T {
             match self {
                 Result::Ok(v) => v,
@@ -40,7 +47,7 @@ pub mod prelude {
         }
     }
 
-    impl<T> UserExitErrorMessage<T> for Option<T> {
+    impl<T> UserErrorMessageExit<T> for Option<T> {
         fn or_exit(self) -> T {
             match self {
                 Option::Some(v) => v,
